@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # ==========================================================
-# 脚本名称: install.sh (IP-Sentinel 分布式边缘节点部署脚本 v2.1.0)
+# 脚本名称: install.sh (IP-Sentinel 分布式边缘节点部署脚本 v3.0.0 - Global Nexus)
 # 核心功能: 区域选择、模块按需开启、官方机器人一键配置
 # ==========================================================
 
 # 你的 GitHub 仓库 Raw 数据直链前缀
-REPO_RAW_URL="https://raw.githubusercontent.com/hotyue/IP-Sentinel/main"
+# REPO_RAW_URL="https://raw.githubusercontent.com/hotyue/IP-Sentinel/main"
+# 临时改为私库地址用于测试
+REPO_RAW_URL="https://git.94211762.xyz/hotyue/IP-Sentinel/raw/branch/main"
 INSTALL_DIR="/opt/ip_sentinel"
 CONFIG_FILE="${INSTALL_DIR}/config.conf"
 
@@ -26,15 +28,21 @@ else
     echo "⚠️ 未知系统，请确保已手动安装 curl, jq, pgrep 和 python3"
 fi
 
-# 2. 交互式引导 (包含卸载选项)
-echo -e "\n[2/7] 请选择你要伪装的目标区域或执行卸载:"
-echo "  1) 🇯🇵 日本 (东京 - JP)"
-echo "  2) 🇺🇸 美国 (美西 - US)"
-echo "  3) 🗑️ 一键卸载 IP-Sentinel"
-read -p "请输入选择 [1-3] (默认1): " REGION_CHOICE
+# 2. 交互式引导与动态地图解析 (v3.0 全球网络)
+echo -e "\n[2/7] 正在连线云端，拉取全球节点地图..."
+curl -sL "${REPO_RAW_URL}/data/map.json" -o "/tmp/map.json"
 
-# 如果选择卸载，拉取卸载脚本执行并退出
-if [ "$REGION_CHOICE" == "3" ]; then
+if [ ! -s "/tmp/map.json" ]; then
+    echo -e "\033[31m❌ 拉取全球地图失败！请检查网络或 GitHub 仓库地址。\033[0m"
+    exit 1
+fi
+
+echo -e "\n请选择操作:"
+echo "  1) 🚀 部署边缘节点 (进入全球节点配置)"
+echo "  2) 🗑️ 一键卸载 IP-Sentinel"
+read -p "请输入选择 [1-2] (默认1): " ACTION_CHOICE
+
+if [ "$ACTION_CHOICE" == "2" ]; then
     echo -e "\n⏳ 正在拉取卸载程序..."
     curl -sL "${REPO_RAW_URL}/core/uninstall.sh" -o "/tmp/ip_uninstall.sh"
     chmod +x "/tmp/ip_uninstall.sh"
@@ -43,16 +51,70 @@ if [ "$REGION_CHOICE" == "3" ]; then
     exit 0
 fi
 
-# 正常安装流程匹配区域
-case ${REGION_CHOICE:-1} in
-    2) REGION_CODE="US" ;;
-    *) REGION_CODE="JP" ;;
-esac
+# 📍 动态一级菜单：国家选择
+echo -e "\n\033[36m📍 【第一级】请选择目标国家/地区:\033[0m"
+jq -r '.countries[] | "\(.id)|\(.name)|\(.keyword_file)"' /tmp/map.json > /tmp/countries.txt
+i=1; COUNTRY_MAP=(); KEYWORD_MAP=()
+while IFS="|" read -r c_id c_name k_file; do
+    echo "  $i) $c_name"
+    COUNTRY_MAP[$i]="$c_id"
+    KEYWORD_MAP[$i]="$k_file"
+    ((i++))
+done < /tmp/countries.txt
 
-# 本地工作目录初始化
+read -p "请输入选择 [1-$((i-1))] (默认1): " C_SEL
+C_SEL=${C_SEL:-1}
+COUNTRY_ID="${COUNTRY_MAP[$C_SEL]}"
+KEYWORD_FILE="${KEYWORD_MAP[$C_SEL]}"
+REGION_CODE="$COUNTRY_ID" # 兼容旧版的 config.conf
+
+# 📍 动态二级菜单：省/州选择
+echo -e "\n\033[36m📍 【第二级】正在检索 [$COUNTRY_ID] 的行政区数据...\033[0m"
+jq -r ".countries[] | select(.id==\"$COUNTRY_ID\") | .states[] | \"\(.id)|\(.name)\"" /tmp/map.json > /tmp/states.txt
+STATE_COUNT=$(wc -l < /tmp/states.txt)
+
+if [ "$STATE_COUNT" -eq 1 ]; then
+    IFS="|" read -r STATE_ID STATE_NAME < /tmp/states.txt
+    echo -e "\033[32m💡 该国家下仅有单一配置 [$STATE_NAME]，已自动跃迁。\033[0m"
+else
+    i=1; STATE_MAP=()
+    while IFS="|" read -r s_id s_name; do
+        echo "  $i) $s_name"
+        STATE_MAP[$i]="$s_id"
+        ((i++))
+    done < /tmp/states.txt
+    read -p "请输入选择 [1-$((i-1))] (默认1): " S_SEL
+    S_SEL=${S_SEL:-1}
+    STATE_ID="${STATE_MAP[$S_SEL]}"
+fi
+
+# 📍 动态三级菜单：城市选择
+echo -e "\n\033[36m📍 【第三级】请锁定具体城市节点:\033[0m"
+jq -r ".countries[] | select(.id==\"$COUNTRY_ID\") | .states[] | select(.id==\"$STATE_ID\") | .cities[] | \"\(.id)|\(.name)\"" /tmp/map.json > /tmp/cities.txt
+CITY_COUNT=$(wc -l < /tmp/cities.txt)
+
+if [ "$CITY_COUNT" -eq 1 ]; then
+    IFS="|" read -r CITY_ID CITY_NAME < /tmp/cities.txt
+    echo -e "\033[32m💡 该区域下仅有单一城市 [$CITY_NAME]，已自动锁定。\033[0m"
+else
+    i=1; CITY_MAP=()
+    while IFS="|" read -r c_id c_name; do
+        echo "  $i) $c_name"
+        CITY_MAP[$i]="$c_id"
+        ((i++))
+    done < /tmp/cities.txt
+    read -p "请输入选择 [1-$((i-1))] (默认1): " CI_SEL
+    CI_SEL=${CI_SEL:-1}
+    CITY_ID="${CITY_MAP[$CI_SEL]}"
+fi
+
+# 清理临时文件
+rm -f /tmp/map.json /tmp/countries.txt /tmp/states.txt /tmp/cities.txt
+
+# 本地工作目录初始化 (支持 v3.0 的深度层级)
 mkdir -p "${INSTALL_DIR}/core"
 mkdir -p "${INSTALL_DIR}/data/keywords"
-mkdir -p "${INSTALL_DIR}/data/regions"
+mkdir -p "${INSTALL_DIR}/data/regions/${COUNTRY_ID}/${STATE_ID}"
 mkdir -p "${INSTALL_DIR}/logs"
 
 # 3. 功能模块前置开关 (按需加载)
@@ -98,9 +160,9 @@ if [[ "$TG_CHOICE" =~ ^[Yy]$ ]]; then
 fi
 
 # 5. 远程拉取冷数据并解析固化
-echo -e "\n[5/7] 正在从你的数据仓库拉取 [${REGION_CODE}] 节点的底层规则..."
-REGION_JSON_FILE="${INSTALL_DIR}/data/regions/${REGION_CODE}.json"
-curl -sL "${REPO_RAW_URL}/data/regions/${REGION_CODE}.json" -o "$REGION_JSON_FILE"
+echo -e "\n[5/7] 正在从云端数据仓库拉取 [${CITY_NAME}] 节点的底层规则..."
+REGION_JSON_FILE="${INSTALL_DIR}/data/regions/${COUNTRY_ID}/${STATE_ID}/${CITY_ID}.json"
+curl -sL "${REPO_RAW_URL}/data/regions/${COUNTRY_ID}/${STATE_ID}/${CITY_ID}.json" -o "$REGION_JSON_FILE"
 
 if [ ! -s "$REGION_JSON_FILE" ]; then
     echo "❌ 拉取或解析规则失败！请检查 Forgejo 仓库是否公开或网络是否畅通。"
@@ -148,7 +210,8 @@ curl -sL "${REPO_RAW_URL}/data/user_agents.txt" -o "${INSTALL_DIR}/data/user_age
 # 动态按需组件
 if [ "$ENABLE_GOOGLE" == "true" ]; then
     curl -sL "${REPO_RAW_URL}/core/mod_google.sh" -o "${INSTALL_DIR}/core/mod_google.sh"
-    curl -sL "${REPO_RAW_URL}/data/keywords/kw_${REGION_CODE}.txt" -o "${INSTALL_DIR}/data/keywords/kw_${REGION_CODE}.txt"
+    # 根据 map.json 动态匹配的词库文件进行下载
+    curl -sL "${REPO_RAW_URL}/data/keywords/${KEYWORD_FILE}" -o "${INSTALL_DIR}/data/keywords/${KEYWORD_FILE}"
 fi
 
 if [ "$ENABLE_TRUST" == "true" ]; then
