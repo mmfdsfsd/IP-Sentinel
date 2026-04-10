@@ -254,8 +254,9 @@ if [[ -n "$TG_TOKEN" ]] && [[ -n "$CHAT_ID" ]]; then
     # 获取公网 IP
     PUBLIC_IP=$(curl -s https://api64.ipify.org || curl -s https://ifconfig.me || echo "未知IP")
     
-    # 构造注册暗号
-    REG_MSG="#REGISTER#:${REGION_NAME}:${PUBLIC_IP}:${AGENT_PORT}"
+    # 构造注册暗号 (修复 v3.0 竖线分隔符与主机名回调 BUG)
+    NODE_NAME=$(hostname | cut -c 1-15)
+    REG_MSG="#REGISTER#|${NODE_NAME}|${PUBLIC_IP}|${AGENT_PORT}"
     
 # 执行主动推送
     PUSH_RESULT=$(curl -s -X POST "${TG_API_URL}" \
