@@ -1,5 +1,9 @@
 # 🛡️ IP-Sentinel (分布式 IP 哨兵集群)
 
+![Agent Installs](https://img.shields.io/endpoint?url=https://ip-sentinel-count.samanthaestime296.workers.dev/stats/agent)
+![Master Commands](https://img.shields.io/endpoint?url=https://ip-sentinel-count.samanthaestime296.workers.dev/stats/master)
+![License](https://img.shields.io/github/license/hotyue/IP-Sentinel)
+
 > **一个极度轻量、零感知、支持中枢遥控的 VPS IP 自动化养护与区域纠偏引擎。**
 
 📢 官方战术交流频道: 🛰️ [IP-Sentinel Matrix](https://t.me/IP_Sentinel_Matrix)
@@ -8,13 +12,13 @@
 
 ## ✨ 核心极客特性
 
-* 🗺️ **全球拓扑矩阵 (Global Nexus)**：**v3.0.0 新特性**。引入动态 `map.json` 索引中心与多级地理架构 (国家-省州-城市)。安装脚本全自动解析云端地图，支持无限扩展全球节点，真正实现“按图索骥”。
-* ☁️ **云端中枢 (Public Master)**：引入官方公共机器人 [@OmniBeacon_bot](https://t.me/OmniBeacon_bot)，新手无需部署 Master 司令部，一键回车即可接入全球养护矩阵，极大降低入伍门槛。
+* 🗺️ **全球拓扑矩阵 (Global Nexus)**：**v3.1 跨洲际跃升**。守护版图现已横跨亚、欧、美三大洲（**美、日、英、德、法、新、港**）。为每个国家注入极其硬核的“原生本地化”搜索词库与本土高权重站点（如政府、权威媒体、高铁网），真正实现“拟真融入”。
+* ☁️ **云端中枢 (Public Master)**：引入官方公共机器人 [@OmniBeacon_bot](https://t.me/OmniBeacon_bot)，新手无需部署 Master 司令部，部署 Agent 时一键回车即可调用官方加密网关，30 秒极速入伍！
 * 🧠 **分布式中枢 (Master-Agent)**：对于硬核极客，支持私有化部署。一台 Master 主控集成 SQLite 数据库，统管无数台 Agent 边缘节点，确保数据绝对私有。
-* 🎮 **TG 战术面板 (Command Center)**：无需记忆繁琐命令，原生 Inline Keyboard 按钮驱动。支持一键调出节点列表、一键下发伪装指令、一键索要精准战报、**毫秒级抓取实时运行日志**。
-* 🛡️ **NAT 穿透与安全网关 (NAT-Friendly)**：边缘节点采用 Python3 极轻量 Webhook 监听，**完全自定义通信端口**，完美支持受限 NAT 小鸡。独创 TG 转发授权机制，杜绝野生节点恶意接入。
+* 🔒 **叹息之墙 (Zero-Trust HMAC)**：**v3.1 核心重构**。全面废弃明文 Token，底层通讯引入 `时间戳 + HMAC-SHA256` 军用级动态签名。指令有效期仅 60 秒（阅后即焚），彻底免疫中间人抓包、重放攻击与端口爆破。
+* 🛡️ **工业级并发与自净引擎**：底层 Webhook 采用多线程模型彻底免疫慢速耗尽攻击；独创“智能清道夫”逻辑，覆盖安装/升级时自动绞杀僵尸进程与冗余定时任务，绝对纯净，告别玄学冲突。
+* 🎮 **TG 战术面板 (Command Center)**：无需记忆繁琐命令，全 Inline Keyboard 交互。支持一键下发伪装指令、一键索要精准战报、**毫秒级抓取边缘节点实时运行日志**。
 * 👻 **高仿真人类行为 (Human-Like)**：摒弃死板的 Ping/Curl，引入单次会话指纹锁定、10 米级 GPS 坐标微抖动、以及 60~150 秒的真实阅读停顿拉伸，完美避开 AI 封控。
-* 📡 **OTA 静默进化 (Smart Updates)**：系统每周日凌晨自动从云端拉取最新的“热搜词汇”和“真实设备指纹池”，确保养护行为与时俱进、永不过时。
 
 ## 📂 项目架构 (Monorepo)
 
@@ -33,7 +37,7 @@
 
 ## 🚀 极速部署 (Quick Start)
 
-v3.0.0 提供了两种接入模式，请根据您的战术需求选择：
+v3.1.x 提供了两种接入模式，请根据您的战术需求选择：
 
 ### 🔹 模式 A：官方公共模式 (最简、推荐)
 **适合不想折腾、只想快速养护 IP 的新兵。**
@@ -64,7 +68,7 @@ bash <(curl -sL https://raw.githubusercontent.com/hotyue/IP-Sentinel/main/core/i
 
 
 🗑️ 一键无痕卸载
-如果你需要清理某个边缘节点，只需重新运行 core/install.sh 并选择 [3]，或直接在节点终端执行：
+如果你需要清理某个边缘节点，只需重新运行 `core/install.sh` 并选择 **[2]**，或直接在节点终端执行：
 
 ```Bash
 bash /opt/ip_sentinel/core/uninstall.sh
