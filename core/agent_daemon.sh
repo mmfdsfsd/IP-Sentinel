@@ -234,8 +234,8 @@ class ThreadedDualStackServer(socketserver.ThreadingMixIn, socketserver.TCPServe
 
 try:
     bind_addr = "::" if socket.has_ipv6 else ""
-    with ThreadedDualStackServer((bind_addr, PORT), AgentHandler) as httpd:
-        httpd.serve_forever()
+    httpd = ThreadedDualStackServer((bind_addr, PORT), AgentHandler)
+    httpd.serve_forever()
 except Exception as e:
     sys.exit(1)
 # ====================================================================================
