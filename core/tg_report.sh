@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==========================================================
-# 脚本名称: tg_report.sh (Telegram 每日战报模块 V3.3.2 动态拼装版)
+# 脚本名称: tg_report.sh (Telegram 每日战报模块 V3.4.0 动态拼装版)
 # 核心功能: 适配 Feature Flag 架构，按需展示 Google/Trust 独立统计数据
 # ==========================================================
 
@@ -155,10 +155,39 @@ else
 
 🕒 **最近执行快照 [${LAST_MOD:-"System"}]:**
 时间: ${LAST_TIME:-"暂无数据"}
-结论: ${LAST_SCORE:-"暂无数据"}
-----------------------------
-💡 哨兵正在后台默默守护您的资产。"
+结论: ${LAST_SCORE:-"暂无数据"}"
 
+fi
+
+# ==========================================
+# 5. [v3.4.0 新增] 云端版本探针与告警模块
+# ==========================================
+# 从配置文件提取当前本地版本，若无则默认为未知
+LOCAL_VER="${AGENT_VERSION:-未知}"
+
+# 极轻量级探针: 抓取 GitHub 云端的 version.txt (超时 3 秒)
+REPO_RAW_URL="https://raw.githubusercontent.com/hotyue/IP-Sentinel/main"
+REMOTE_VER=$(curl -s -m 3 "${REPO_RAW_URL}/version.txt" | tr -d '[:space:]')
+
+# 构建底部引擎状态块
+MSG="$MSG
+----------------------------
+🛡️ **系统引擎状态**
+当前运行版本: \`v${LOCAL_VER}\`"
+
+# 比对逻辑：如果成功抓到了远端版本，且和本地不一样
+if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
+    MSG="$MSG
+最新官方版本: \`v${REMOTE_VER}\` (✨有新版)
+💡 *司令部提示：检测到新版装甲，请长官登录节点执行平滑热更新！*"
+elif [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" == "$LOCAL_VER" ]; then
+    MSG="$MSG
+最新官方版本: \`v${REMOTE_VER}\` (✅已是最新)
+💡 *哨兵正在后台默默守护您的资产。*"
+else
+    # 抓取失败兜底
+    MSG="$MSG
+💡 *哨兵正在后台默默守护您的资产。*"
 fi
 
 # 5. 调用 API 推送 (接入安全网关)
