@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==========================================================
-# 脚本名称: tg_report.sh (Telegram 每日战报模块 V3.3.1 动态拼装版)
+# 脚本名称: tg_report.sh (Telegram 每日战报模块 V3.3.2 动态拼装版)
 # 核心功能: 适配 Feature Flag 架构，按需展示 Google/Trust 独立统计数据
 # ==========================================================
 
@@ -19,7 +19,9 @@ if [ -z "$TG_TOKEN" ] || [ -z "$CHAT_ID" ]; then
 fi
 
 # 2. 节点元数据抓取 (v3.2.2 协议自适应与多级容灾版)
-NODE_NAME=$(hostname | cut -c 1-15)
+# [v3.3.2 修复: 引入 IP 哈希防同名覆盖机制]
+IP_HASH=$(echo "${PUBLIC_IP:-127.0.0.1}" | md5sum | cut -c 1-4 | tr 'a-z' 'A-Z')
+NODE_NAME="$(hostname | cut -c 1-10)_${IP_HASH}"
 
 # --- [防线 1: 底层路由锁定与协议自适应] ---
 CURL_BIND_OPT=""
