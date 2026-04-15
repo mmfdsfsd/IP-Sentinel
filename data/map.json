@@ -1,6 +1,6 @@
 {
   "version": "3.5.0",
-  "updated_at": "2026-04-14",
+  "updated_at": "2026-04-15",
   "continents": [
     {
       "id": "ASIA",
@@ -44,6 +44,20 @@
               "name": "Default State",
               "cities": [
                 { "id": "HongKong", "name": "Hong Kong (香港)" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "VN",
+          "name": "Vietnam (越南)",
+          "keyword_file": "kw_VN.txt",
+          "states": [
+            {
+              "id": "Default",
+              "name": "Default State",
+              "cities": [
+                { "id": "Hanoi", "name": "Hanoi (河内)" }
               ]
             }
           ]
@@ -95,6 +109,34 @@
               ]
             }
           ]
+        },
+        {
+          "id": "NL",
+          "name": "Netherlands (荷兰)",
+          "keyword_file": "kw_NL.txt",
+          "states": [
+            {
+              "id": "Default",
+              "name": "Default State",
+              "cities": [
+                { "id": "Amsterdam", "name": "Amsterdam (阿姆斯特丹)" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ES",
+          "name": "Spain (西班牙)",
+          "keyword_file": "kw_ES.txt",
+          "states": [
+            {
+              "id": "Default",
+              "name": "Default State",
+              "cities": [
+                { "id": "Madrid", "name": "Madrid (马德里)" }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -113,6 +155,20 @@
               "cities": [
                 { "id": "Los_Angeles", "name": "Los Angeles (洛杉矶)" },
                 { "id": "San_Jose", "name": "San Jose (圣何塞)" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "CA",
+          "name": "Canada (加拿大)",
+          "keyword_file": "kw_CA.txt",
+          "states": [
+            {
+              "id": "Default",
+              "name": "Default State",
+              "cities": [
+                { "id": "Toronto", "name": "Toronto (多伦多)" }
               ]
             }
           ]
