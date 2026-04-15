@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==========================================================
-# 脚本名称: tg_master.sh (Master 端调度枢纽 V3.3.2 动态签名版)
+# 脚本名称: tg_master.sh (Master 端调度枢纽 - 动态锚点版)
 # 核心功能: 监听 TG、操作 SQLite、Webhook 精准调度、403权限拦截、僵尸节点清理
 # ==========================================================
 
@@ -9,9 +9,11 @@ CONF="/opt/ip_sentinel_master/master.conf"
 [ ! -f "$CONF" ] && exit 1
 source "$CONF"
 
-# [v3.4.0 核心: 主控版本锚点与云通信地址]
-MASTER_VERSION="3.4.0"
+# [核心: 运行态版本继承与云通信地址]
 REPO_RAW_URL="https://raw.githubusercontent.com/hotyue/IP-Sentinel/main"
+# MASTER_VERSION 已经在上方的 source "$CONF" 中被载入
+# 如果本地极度陈旧没有该变量，才给定一个基础兜底值，避免变量为空导致崩溃
+MASTER_VERSION=${MASTER_VERSION:-"3.5.0"}
 
 OFFSET_FILE="${MASTER_DIR}/.tg_offset"
 [[ -f $OFFSET_FILE ]] || echo "0" > $OFFSET_FILE
