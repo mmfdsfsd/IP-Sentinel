@@ -232,18 +232,22 @@ class AgentHandler(http.server.BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"Log transmission failed: {e}")
 
-        # 路由 5: 节点重命名展示别名同步接口 (v3.5.2 核心)
+        # 路由 5: 节点重命名展示别名同步接口 (v3.5.2 核心 - 综合防雷加固版)
         elif req_path == '/trigger_rename':
             raw_alias = query.get('alias', [''])[0]
             if raw_alias:
                 import re
-                # 🛡️ 安全装甲: 仅允许中英文、数字、下划线、中划线，最大20字符 (0 注入风险)
-                safe_alias = re.sub(r'[^\w\-\u4e00-\u9fa5]', '', urllib.parse.unquote(raw_alias))[:20]
+                # 🛡️ 综合避雷防御机制:
+                # 1. 自动将下划线(_)替换为中划线(-)，防止 TG Markdown 渲染崩溃
+                decoded_alias = urllib.parse.unquote(raw_alias).replace('_', '-')
+                # 2. 剔除 \w 中的下划线，严格限制仅允许中英文、数字、中划线，最大20字符
+                safe_alias = re.sub(r'[^a-zA-Z0-9\-\u4e00-\u9fa5]', '', decoded_alias)[:20]
+                
                 if safe_alias:
                     try:
-                        # 1. 纯文件流修改 config.conf (绝对阻断 Shell 注入)
+                        # 3. 强制指定 UTF-8 纯文件流修改，彻底阻断中文编码崩溃与 Shell 注入
                         config_path = '/opt/ip_sentinel/config.conf'
-                        with open(config_path, 'r') as f:
+                        with open(config_path, 'r', encoding='utf-8') as f:
                             lines = f.readlines()
                         
                         alias_found = False
@@ -259,10 +263,10 @@ class AgentHandler(http.server.BaseHTTPRequestHandler):
                         if not alias_found:
                             lines.append(f'NODE_ALIAS="{safe_alias}"\n')
                             
-                        with open(config_path, 'w') as f:
+                        with open(config_path, 'w', encoding='utf-8') as f:
                             f.writelines(lines)
                             
-                        # 2. 数据闭环: 主动向 Master 发送含有第 6 字段的更新报文
+                        # 4. 数据闭环: 弃用脆弱的 urllib，通过系统 curl 异步发包绕过 WAF 拦截
                         region = config_dict.get('REGION_CODE', 'UNKNOWN')
                         node_name = config_dict.get('NODE_NAME', 'UNKNOWN')
                         agent_ip = config_dict.get('PUBLIC_IP', '127.0.0.1')
@@ -270,11 +274,15 @@ class AgentHandler(http.server.BaseHTTPRequestHandler):
                         chat_id = config_dict.get('CHAT_ID', '')
                         tg_url = config_dict.get('TG_API_URL', '')
                         
-                        reg_msg = f"#REGISTER#|{region}|{node_name}|{agent_ip}|{agent_port}|{safe_alias}"
-                        data = urllib.parse.urlencode({'chat_id': chat_id, 'text': reg_msg}).encode('utf-8')
-                        req = urllib.request.Request(tg_url, data=data)
-                        urllib.request.urlopen(req, timeout=5)
+                        if tg_url and chat_id:
+                            reg_msg = f"#REGISTER#|{region}|{node_name}|{agent_ip}|{agent_port}|{safe_alias}"
+                            subprocess.Popen([
+                                'curl', '-s', '-m', '10', '-X', 'POST', tg_url,
+                                '-d', f'chat_id={chat_id}',
+                                '-d', f'text={reg_msg}'
+                            ])
                         
+                        # 立刻响应主控，防止网络阻塞导致 Master 等待超时
                         self.send_response(200)
                         self.send_header("Content-type", "text/plain")
                         self.end_headers()
@@ -283,6 +291,7 @@ class AgentHandler(http.server.BaseHTTPRequestHandler):
                     except Exception as e:
                         print(f"Rename failed: {e}")
             
+            # 如果触发任何异常拦截，退回 400 状态码
             self.send_response(400)
             self.end_headers()
             self.wfile.write(b"400 Bad Request: Invalid Alias\n")
