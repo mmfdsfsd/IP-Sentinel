@@ -1,6 +1,6 @@
 {
-  "version": "3.1.0",
-  "updated_at": "2026-04-11",
+  "version": "3.5.2",
+  "updated_at": "2026-04-16",
   "countries": [
     {
       "id": "US",
@@ -57,6 +57,19 @@
             { "id": "Frankfurt", "name": "Frankfurt (法兰克福)" }
           ]
         }
+      ]
+    },
+    {
+      "id": "VN",
+      "name": "Vietnam (越南)",
+      "keyword_file": "kw_VN.txt",
+      "states": [
+         { 
+          "id": "Default", 
+          "name": "Default State",
+          "cities": [ { "id": "Hanoi", "name": "Hanoi (河内)" } 
+          ] 
+         }
       ]
     },
     {
